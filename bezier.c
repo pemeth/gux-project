@@ -6,7 +6,7 @@
 
 #include "bezier.h"
 
-BezierCurveNode* add_node(
+BezierCurveNode* append_node(
     BezierCurveList *list,
     Point start,
     Point c1,
@@ -135,10 +135,10 @@ int main(int argc, char *argv[])
     BezierCurveList list;
     init_list(&list);
 
-    add_node(&list, (struct Point) {0,0}, (struct Point) {0,0}, (struct Point) {0,0}, (struct Point) {0,0});
-    add_node(&list, (struct Point) {1,1}, (struct Point) {1,1}, (struct Point) {1,1}, (struct Point) {1,1});
-    add_node(&list, (struct Point) {2,2}, (struct Point) {2,2}, (struct Point) {2,2}, (struct Point) {2,2});
-    add_node(&list, (struct Point) {3,3}, (struct Point) {3,3}, (struct Point) {3,3}, (struct Point) {3,3});
+    append_node(&list, (struct Point) {0,0}, (struct Point) {0,0}, (struct Point) {0,0}, (struct Point) {0,0});
+    append_node(&list, (struct Point) {1,1}, (struct Point) {1,1}, (struct Point) {1,1}, (struct Point) {1,1});
+    append_node(&list, (struct Point) {2,2}, (struct Point) {2,2}, (struct Point) {2,2}, (struct Point) {2,2});
+    append_node(&list, (struct Point) {3,3}, (struct Point) {3,3}, (struct Point) {3,3}, (struct Point) {3,3});
 
     delete_list(&list);
 

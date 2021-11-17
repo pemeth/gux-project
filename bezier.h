@@ -37,7 +37,7 @@ void remove_last(BezierCurveList *list);
 void init_list(BezierCurveList *list);
 void print_list(BezierCurveList *list);
 void print_node(BezierCurveNode *node);
-BezierCurveNode* add_node(
+BezierCurveNode* append_node(
     BezierCurveList *list,
     Point start,
     Point c1,
