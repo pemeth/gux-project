@@ -1,2 +1,9 @@
 # VSCode workspace settings
 .vscode/
+
+# Executable(s)
+bedit
+bezier
+
+# Object files
+*.o
