@@ -28,11 +28,15 @@ typedef struct BezierCurveNode
 typedef struct BezierCurveList
 {
     struct BezierCurveNode *root;
-    struct BezierCurveNode *last;
+    size_t n_nodes;
 } BezierCurveList;
 
 void delete_list(BezierCurveList *list);
+void remove_nth(BezierCurveList *list, size_t n);
+void remove_last(BezierCurveList *list);
 void init_list(BezierCurveList *list);
+void print_list(BezierCurveList *list);
+void print_node(BezierCurveNode *node);
 BezierCurveNode* add_node(
     BezierCurveList *list,
     Point start,

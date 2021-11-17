@@ -106,12 +106,7 @@ int main(int argc, char *argv[])
 {
     GtkApplication *app;
 
-	RuntimeInfo info = {
-		(BezierCurveList) {NULL, NULL},
-		(MouseClick) {0, 0}
-	};
-
-	// A little redundant, but I'll leave it here
+	RuntimeInfo info;
 	init_list(&(info.list));
 
     app = gtk_application_new("xnemet04.vut.fit.gux.bedit", G_APPLICATION_FLAGS_NONE);
