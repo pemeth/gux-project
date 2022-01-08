@@ -12,6 +12,7 @@ typedef struct RuntimeInfo
 {
 	BezierCurveList list;
 	MouseClick click;
+	GtkApplication *app; //!< Pointer to the application.
 } RuntimeInfo;
 
 static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
@@ -66,9 +67,23 @@ static void canvas_button_move(GtkWidget* self, GdkEventMotion* event, RuntimeIn
 	gtk_widget_queue_draw(self);
 }
 
+/* Quit the app gracefully. */
+static void quit_app(GtkWidget* self, RuntimeInfo *data)
+{
+	delete_list(&(data->list));
+	g_application_quit(G_APPLICATION(data->app));
+}
+
 static void activate(GtkApplication *app, RuntimeInfo *data)
 {
 	GtkWidget *window, *box, *canvas;
+	GtkWidget *menubar, *fileMenu, *editMenu;
+	/* Menu Items */
+	GtkWidget *quitMI, *addPointMI;
+	/* Top Level Menu Items */
+	GtkWidget *fileTLMI, *editTLMI;
+
+	GtkAccelGroup *accel_group;
 
 	window = gtk_application_window_new(app);
 
@@ -76,10 +91,47 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 	gtk_window_set_title(GTK_WINDOW(window), "bedit");
 	gtk_window_set_resizable(GTK_WINDOW(window), TRUE);
 
-	box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-
+	box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_container_add(GTK_CONTAINER(window), box);
 
+	/********* MENUS *********/
+	/*************************/
+	menubar = gtk_menu_bar_new();
+
+	accel_group = gtk_accel_group_new ();
+	gtk_window_add_accel_group (GTK_WINDOW (window), accel_group);
+
+	/* Menus */
+	fileMenu = gtk_menu_new();
+	editMenu = gtk_menu_new();
+
+	/* Menu Items */
+	fileTLMI = gtk_menu_item_new_with_label("File");
+	editTLMI = gtk_menu_item_new_with_label("Edit");
+	quitMI = gtk_menu_item_new_with_label("Quit");
+	addPointMI = gtk_menu_item_new_with_label("Add point");
+
+	/* Menu encapsulation */
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileTLMI), fileMenu);
+	gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), quitMI);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menubar), fileTLMI);
+
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(editTLMI), editMenu);
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addPointMI);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menubar), editTLMI);
+
+	gtk_box_pack_start(GTK_BOX(box), menubar, FALSE, FALSE, 0);
+
+	/* Menu Item accelerators */
+	gtk_widget_add_accelerator(quitMI, "activate", accel_group,
+		GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
+	/* Menu signals */
+	g_signal_connect(G_OBJECT(quitMI), "activate",
+		G_CALLBACK(quit_app), data);
+
+	/********* CANVAS ********/
+	/*************************/
 	canvas = gtk_drawing_area_new();
 
 	gtk_widget_add_events(
@@ -111,6 +163,9 @@ int main(int argc, char *argv[])
 
     app = gtk_application_new("xnemet04.vut.fit.gux.bedit", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), &info);
+
+	// Save the pointer to the app - mainly for quitting through the File menu
+	info.app = app;
 
     int status = g_application_run(G_APPLICATION(app), argc, argv);
     g_object_unref(app);
