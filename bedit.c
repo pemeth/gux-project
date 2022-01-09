@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdint.h>
 #include <gtk/gtk.h>
 
@@ -32,6 +33,7 @@ typedef struct RuntimeInfo
 	GtkApplication *app; //!< Pointer to the application.
 	uint8_t addingCurveStep;
 	CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
+	uint8_t flagShowTangents;
 } RuntimeInfo;
 
 static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
@@ -57,7 +59,13 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
 
 	// Render all saved curves
 	BezierCurveNode *curr = data->list.root;
+	double cpRadius = 5.0;
+	double curveLineWidth = cairo_get_line_width(cr);
+	double tangentLineWidth = 1.0;
+	double dashes[] = {2.0};
 	while (curr) {
+		// The curve
+		cairo_new_path(cr);
 		cairo_move_to(cr, curr->start.x, curr->start.y);
 		cairo_curve_to(
 			cr,
@@ -66,6 +74,31 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
 			curr->end.x, curr->end.y
 		);
 		cairo_stroke(cr);
+
+		if (data->flagShowTangents) {
+			// The tangents to c1 and c2
+			cairo_set_dash(cr, dashes, 1, 0.0);
+			cairo_set_line_width(cr, tangentLineWidth);
+
+			cairo_new_path(cr);
+			cairo_move_to(cr, curr->start.x, curr->start.y);
+			cairo_line_to(cr, curr->c1.x, curr->c1.y);
+			cairo_stroke(cr);
+			cairo_new_path(cr);
+			cairo_move_to(cr, curr->end.x, curr->end.y);
+			cairo_line_to(cr, curr->c2.x, curr->c2.y);
+			cairo_stroke(cr);
+
+			// The endpoints to the tangents
+			cairo_arc(cr, curr->c1.x, curr->c1.y, cpRadius, 0.0, 2 * M_PI);
+			cairo_stroke(cr);
+			cairo_arc(cr, curr->c2.x, curr->c2.y, cpRadius, 0.0, 2 * M_PI);
+			cairo_stroke(cr);
+
+			// Reset lines
+			cairo_set_dash(cr, dashes, 0, 0.0);
+			cairo_set_line_width(cr, curveLineWidth);
+		}
 
 		curr = curr->next;
 	}
@@ -146,6 +179,13 @@ static void canvas_button_move(GtkWidget* self, GdkEventMotion* event, RuntimeIn
 	gtk_widget_queue_draw(self);
 }
 
+static void toggle_show_tangents(GtkWidget* self, RuntimeInfo *data)
+{
+	data->flagShowTangents = data->flagShowTangents ? FALSE : TRUE;
+	// TODO Figure out how to redraw the cairo widget when I have no reference
+	//      to it in this callback.
+}
+
 /* Quit the app gracefully. */
 static void quit_app(GtkWidget* self, RuntimeInfo *data)
 {
@@ -158,7 +198,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 	GtkWidget *window, *box, *canvas;
 	GtkWidget *menubar, *fileMenu, *editMenu;
 	/* Menu Items */
-	GtkWidget *quitMI, *addPointMI;
+	GtkWidget *quitMI, *addPointMI, *showTangentsMI;
 	/* Top Level Menu Items */
 	GtkWidget *fileTLMI, *editTLMI;
 
@@ -189,6 +229,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 	editTLMI = gtk_menu_item_new_with_label("Edit");
 	quitMI = gtk_menu_item_new_with_label("Quit");
 	addPointMI = gtk_menu_item_new_with_label("Add curve");
+	showTangentsMI = gtk_menu_item_new_with_label("Show tangents");
 
 	/* Menu encapsulation */
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileTLMI), fileMenu);
@@ -197,6 +238,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(editTLMI), editMenu);
 	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addPointMI);
+	gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), showTangentsMI);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menubar), editTLMI);
 
 	gtk_box_pack_start(GTK_BOX(box), menubar, FALSE, FALSE, 0);
@@ -206,12 +248,16 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 		GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 	gtk_widget_add_accelerator(addPointMI, "activate", accel_group,
 		GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator(showTangentsMI, "activate", accel_group,
+		GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
 
 	/* Menu signals */
 	g_signal_connect(G_OBJECT(quitMI), "activate",
 		G_CALLBACK(quit_app), data);
 	g_signal_connect(G_OBJECT(addPointMI), "activate",
 		G_CALLBACK(adding_curve), data);
+	g_signal_connect(G_OBJECT(showTangentsMI), "activate",
+		G_CALLBACK(toggle_show_tangents), data);
 
 	/********* CANVAS ********/
 	/*************************/
@@ -244,6 +290,7 @@ int main(int argc, char *argv[])
 	RuntimeInfo info;
 	init_list(&(info.list));
 	info.addingCurveStep = NOT_ADDING_CURVE;
+	info.flagShowTangents = TRUE;
 
     app = gtk_application_new("xnemet04.vut.fit.gux.bedit", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), &info);
