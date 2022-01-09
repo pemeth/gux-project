@@ -1,6 +1,15 @@
+#include <stdint.h>
 #include <gtk/gtk.h>
 
 #include "bezier.h"
+
+// TODO probably move these to a header
+
+#define ADDING_CURVE_START 1
+#define ADDING_CURVE_CP1   2
+#define ADDING_CURVE_CP2   4
+#define ADDING_CURVE_END   8
+#define NOT_ADDING_CURVE   16
 
 typedef struct MouseClick
 {
@@ -8,11 +17,21 @@ typedef struct MouseClick
 	gdouble y;
 } MouseClick;
 
+typedef struct CurvePoints
+{
+	Point start;
+	Point c1;
+	Point c2;
+	Point end;
+} CurvePoints;
+
 typedef struct RuntimeInfo
 {
 	BezierCurveList list;
 	MouseClick click;
 	GtkApplication *app; //!< Pointer to the application.
+	uint8_t addingCurveStep;
+	CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
 } RuntimeInfo;
 
 static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
@@ -36,19 +55,79 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
 	cairo_fill(cr);
 	cairo_stroke(cr);
 
+	// Render all saved curves
+	BezierCurveNode *curr = data->list.root;
+	while (curr) {
+		cairo_move_to(cr, curr->start.x, curr->start.y);
+		cairo_curve_to(
+			cr,
+			curr->c1.x, curr->c1.y,
+			curr->c2.x, curr->c2.y,
+			curr->end.x, curr->end.y
+		);
+		cairo_stroke(cr);
+
+		curr = curr->next;
+	}
+
 	// A demo for modifying a bezier curve by dragging the control point
-	cairo_new_path(cr);
+	/* cairo_new_path(cr);
 	cairo_move_to(cr, 250, 200);
 	cairo_curve_to(cr, 250, 250, data->click.x, data->click.y, 300, 300);
-	cairo_stroke(cr);
+	cairo_stroke(cr); */
+
+	// Show tangent line of the control point
+	/* cairo_new_path(cr);
+	cairo_move_to(cr, 300, 300);
+	cairo_line_to(cr, data->click.x, data->click.y);
+	double dashes[] = {2.0};
+	cairo_set_dash(cr, dashes, 1, 0.0);
+	cairo_set_line_width(cr, 1.0);
+	cairo_stroke(cr); */
 
 	return TRUE;
+}
+
+/* Update the runtime information that a curve is being added by the user. */
+static void adding_curve(GtkWidget *self, RuntimeInfo *data)
+{
+	data->addingCurveStep = ADDING_CURVE_START;
 }
 
 static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, RuntimeInfo *data)
 {
 	data->click.x = event->x;
 	data->click.y = event->y;
+
+	if (data->addingCurveStep == ADDING_CURVE_START) {
+		// Adding curve starting point
+		data->lastAddedCurve.start = (Point){.x = event->x, .y = event->y};
+		data->addingCurveStep = data->addingCurveStep << 1;
+	} else if (data->addingCurveStep == ADDING_CURVE_CP1) {
+		// Adding first curve control point
+		data->lastAddedCurve.c1 = (Point){.x = event->x, .y = event->y};
+		data->addingCurveStep = data->addingCurveStep << 1;
+	} else if (data->addingCurveStep == ADDING_CURVE_CP2) {
+		// Adding second curve control point
+		data->lastAddedCurve.c2 = (Point){.x = event->x, .y = event->y};
+		data->addingCurveStep = data->addingCurveStep << 1;
+	} else if (data->addingCurveStep == ADDING_CURVE_END) {
+		// Adding curve endpoint
+		data->lastAddedCurve.end = (Point){.x = event->x, .y = event->y};
+
+		// Curve is fully defined - save it
+		append_node(
+			&(data->list),
+			data->lastAddedCurve.start,
+			data->lastAddedCurve.c1,
+			data->lastAddedCurve.c2,
+			data->lastAddedCurve.end
+		);
+
+		data->addingCurveStep = data->addingCurveStep << 1; // NOT_ADDING_CURVE
+	} else {
+		/* TODO error */
+	}
 
 	gtk_widget_queue_draw(self);
 
@@ -109,7 +188,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 	fileTLMI = gtk_menu_item_new_with_label("File");
 	editTLMI = gtk_menu_item_new_with_label("Edit");
 	quitMI = gtk_menu_item_new_with_label("Quit");
-	addPointMI = gtk_menu_item_new_with_label("Add point");
+	addPointMI = gtk_menu_item_new_with_label("Add curve");
 
 	/* Menu encapsulation */
 	gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileTLMI), fileMenu);
@@ -125,10 +204,14 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 	/* Menu Item accelerators */
 	gtk_widget_add_accelerator(quitMI, "activate", accel_group,
 		GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator(addPointMI, "activate", accel_group,
+		GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
 
 	/* Menu signals */
 	g_signal_connect(G_OBJECT(quitMI), "activate",
 		G_CALLBACK(quit_app), data);
+	g_signal_connect(G_OBJECT(addPointMI), "activate",
+		G_CALLBACK(adding_curve), data);
 
 	/********* CANVAS ********/
 	/*************************/
@@ -160,6 +243,7 @@ int main(int argc, char *argv[])
 
 	RuntimeInfo info;
 	init_list(&(info.list));
+	info.addingCurveStep = NOT_ADDING_CURVE;
 
     app = gtk_application_new("xnemet04.vut.fit.gux.bedit", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), &info);
