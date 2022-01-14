@@ -1,30 +1,18 @@
 #include <math.h>
 #include <stdint.h>
+
 #include <gtk/gtk.h>
 
+#include "bedit.h"
 #include "bezier.h"
 
 // TODO probably move these to a header
-
-#define ADDING_CURVE_START 1
-#define ADDING_CURVE_CP1   2
-#define ADDING_CURVE_CP2   4
-#define ADDING_CURVE_END   8
-#define NOT_ADDING_CURVE   16
 
 typedef struct MouseClick
 {
 	gdouble x;
 	gdouble y;
 } MouseClick;
-
-typedef struct CurvePoints
-{
-	Point start;
-	Point c1;
-	Point c2;
-	Point end;
-} CurvePoints;
 
 typedef struct RuntimeInfo
 {
