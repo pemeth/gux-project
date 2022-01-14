@@ -9,16 +9,10 @@
 
 // TODO probably move these to a header
 
-typedef struct MouseClick
-{
-    gdouble x;
-    gdouble y;
-} MouseClick;
-
 typedef struct RuntimeInfo
 {
     BezierCurveList list;
-    MouseClick click;
+    Point click;
     GtkApplication *app; //!< Pointer to the application.
     uint8_t addingCurveStep;
     CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
