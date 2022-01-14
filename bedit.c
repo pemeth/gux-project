@@ -5,6 +5,7 @@
 
 #include "bedit.h"
 #include "bezier.h"
+#include "utils.h"
 
 // TODO probably move these to a header
 
@@ -44,6 +45,10 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
 	cairo_close_path(cr);
 	cairo_fill(cr);
 	cairo_stroke(cr);
+
+	if (data->addingCurveStep != NOT_ADDING_CURVE) {
+		show_selected_points(cr, data->addingCurveStep, data->lastAddedCurve);
+	}
 
 	// Render all saved curves
 	BezierCurveNode *curr = data->list.root;
