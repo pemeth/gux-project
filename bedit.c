@@ -272,7 +272,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 
 	gtk_box_pack_start(GTK_BOX(box), canvas, TRUE, TRUE, 0);
 
-	g_signal_connect(G_OBJECT(canvas), "button-press-event",
+	g_signal_connect(G_OBJECT(canvas), "button-release-event",
 		G_CALLBACK(canvas_button_pressed), data);
 	g_signal_connect(G_OBJECT(canvas), "motion-notify-event",
 		G_CALLBACK(canvas_button_move), data);
