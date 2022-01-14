@@ -11,10 +11,10 @@
 
 typedef struct CurvePoints
 {
-	Point start;
-	Point c1;
-	Point c2;
-	Point end;
+    Point start;
+    Point c1;
+    Point c2;
+    Point end;
 } CurvePoints;
 
 #endif /* BEDIT_H */
