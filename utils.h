@@ -14,9 +14,9 @@
  * @param list list of bezier curves.
  * @param p the point to be checked.
  * @param m maximum margin around the real point, where the click is valid.
- * @returns Non-zero value if click is on a bezier point, 0 otherwise.
+ * @returns Pointer to the curve, for which the point was found, NULL otherwise.
  */
-uint8_t is_click_on_bezier(BezierCurveList *list, Point p, double m);
+BezierCurveNode* is_click_on_bezier(BezierCurveList *list, Point p, double m);
 
 /**
  * When the user is adding a new bezier line, show the points he already defined.
