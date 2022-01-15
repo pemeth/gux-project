@@ -11,6 +11,7 @@
 
 typedef struct RuntimeInfo
 {
+    GtkWidget *canvas;
     BezierCurveList list;
     Point click;
     GtkApplication *app; //!< Pointer to the application.
@@ -189,8 +190,8 @@ static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, Runti
 static void toggle_show_tangents(GtkWidget* self, RuntimeInfo *data)
 {
     data->flagShowTangents = data->flagShowTangents ? FALSE : TRUE;
-    // TODO Figure out how to redraw the cairo widget when I have no reference
-    //      to it in this callback.
+
+    gtk_widget_queue_draw(data->canvas);
 }
 
 /* Quit the app gracefully. */
@@ -269,6 +270,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     /********* CANVAS ********/
     /*************************/
     canvas = gtk_drawing_area_new();
+    data->canvas = canvas;
 
     gtk_widget_add_events(
         canvas,
