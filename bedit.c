@@ -154,16 +154,18 @@ static gboolean canvas_button_released(GtkWidget *self, GdkEventButton *event, R
     return TRUE;
 }
 
-static void canvas_button_move(GtkWidget* self, GdkEventMotion* event, RuntimeInfo *data)
+static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, RuntimeInfo *data)
 {
     if ( !(event->state & GDK_BUTTON1_MASK) ) {
-        return;
+        return TRUE;
     }
 
     data->click.x = event->x;
     data->click.y = event->y;
 
     gtk_widget_queue_draw(self);
+
+    return TRUE;
 }
 
 static void toggle_show_tangents(GtkWidget* self, RuntimeInfo *data)
