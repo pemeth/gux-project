@@ -16,6 +16,8 @@ typedef struct RuntimeInfo
     GtkApplication *app; //!< Pointer to the application.
     uint8_t addingCurveStep;
     CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
+    Point *clickedPoint;
+    BezierCurveNode *clickedBezier;
     uint8_t flagShowTangents;
 } RuntimeInfo;
 
@@ -154,6 +156,16 @@ static gboolean canvas_button_released(GtkWidget *self, GdkEventButton *event, R
     return TRUE;
 }
 
+static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, RuntimeInfo *data)
+{
+    data->click.x = event->x;
+    data->click.y = event->y;
+
+    is_click_on_bezier(&(data->list), data->click, 10, &(data->clickedPoint), &(data->clickedBezier));
+
+    return TRUE;
+}
+
 static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, RuntimeInfo *data)
 {
     if ( !(event->state & GDK_BUTTON1_MASK) ) {
@@ -162,6 +174,12 @@ static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, Runti
 
     data->click.x = event->x;
     data->click.y = event->y;
+
+    // If a point was clicked on it is selected - move it around
+    if (data->clickedPoint != NULL) {
+        data->clickedPoint->x = data->click.x;
+        data->clickedPoint->y = data->click.y;
+    }
 
     gtk_widget_queue_draw(self);
 
@@ -263,6 +281,8 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 
     g_signal_connect(G_OBJECT(canvas), "button-release-event",
         G_CALLBACK(canvas_button_released), data);
+    g_signal_connect(G_OBJECT(canvas), "button-press-event",
+        G_CALLBACK(canvas_button_pressed), data);
     g_signal_connect(G_OBJECT(canvas), "motion-notify-event",
         G_CALLBACK(canvas_button_move), data);
     g_signal_connect(G_OBJECT(canvas), "draw",
