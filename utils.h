@@ -10,13 +10,18 @@
 
 /**
  * Check whether a click is in the vicinity of a start/end/control point.
+ * The point and its respective BezierCurveNode is returned through the last
+ * two arguments. If the point is not found, these are set to NULL.
  *
  * @param list list of bezier curves.
  * @param p the point to be checked.
  * @param m maximum margin around the real point, where the click is valid.
- * @returns Pointer to the curve, for which the point was found, NULL otherwise.
+ * @param foundPoint a double pointer,
+ *  through which the found point will be returned. NULL if point is not found.
+ * @param foundBezierCurve a double pointer, through which the Bezier curve,
+ *  to which the found point belongs, is returned. NULL if point is not found.
  */
-BezierCurveNode* is_click_on_bezier(BezierCurveList *list, Point p, double m);
+void is_click_on_bezier(BezierCurveList *list, Point p, double m, Point **foundPoint, BezierCurveNode **foundBezierCurve);
 
 /**
  * When the user is adding a new bezier line, show the points he already defined.

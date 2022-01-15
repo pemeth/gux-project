@@ -29,24 +29,42 @@ uint8_t is_point_in_margin(Point center, Point tested, double margin)
     return FALSE;
 }
 
-BezierCurveNode* is_click_on_bezier(BezierCurveList *list, Point p, double m)
+void is_click_on_bezier(BezierCurveList *list, Point p, double m, Point **foundPoint, BezierCurveNode **foundBezierCurve)
 {
     BezierCurveNode *curr = list->root;
+    *foundPoint = NULL;
+    *foundBezierCurve = NULL;
 
     while (curr) {
-        if (is_point_in_margin(curr->start, p, m) ||
-            is_point_in_margin(curr->c1, p, m) ||
-            is_point_in_margin(curr->c2, p, m) ||
-            is_point_in_margin(curr->end, p, m)) {
-            // Found
-            return curr;
+        if (is_point_in_margin(curr->start, p, m)) {
+            *foundPoint = &(curr->start);
+            *foundBezierCurve = curr;
+            return;
+        }
+
+        if (is_point_in_margin(curr->c1, p, m)) {
+            *foundPoint = &(curr->c1);
+            *foundBezierCurve = curr;
+            return;
+        }
+
+        if (is_point_in_margin(curr->c2, p, m)) {
+            *foundPoint = &(curr->c2);
+            *foundBezierCurve = curr;
+            return;
+        }
+
+        if (is_point_in_margin(curr->end, p, m)) {
+            *foundPoint = &(curr->end);
+            *foundBezierCurve = curr;
+            return;
         }
 
         curr = curr->next;
     }
 
     // Not found
-    return NULL;
+    return;
 }
 
 
