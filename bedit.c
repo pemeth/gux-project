@@ -114,7 +114,7 @@ static void adding_curve(GtkWidget *self, RuntimeInfo *data)
     data->addingCurveStep = ADDING_CURVE_START;
 }
 
-static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, RuntimeInfo *data)
+static gboolean canvas_button_released(GtkWidget *self, GdkEventButton *event, RuntimeInfo *data)
 {
     data->click.x = event->x;
     data->click.y = event->y;
@@ -260,7 +260,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     gtk_box_pack_start(GTK_BOX(box), canvas, TRUE, TRUE, 0);
 
     g_signal_connect(G_OBJECT(canvas), "button-release-event",
-        G_CALLBACK(canvas_button_pressed), data);
+        G_CALLBACK(canvas_button_released), data);
     g_signal_connect(G_OBJECT(canvas), "motion-notify-event",
         G_CALLBACK(canvas_button_move), data);
     g_signal_connect(G_OBJECT(canvas), "draw",
