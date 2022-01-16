@@ -19,7 +19,7 @@ typedef struct RuntimeInfo
     CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
     Point *clickedPoint;
     BezierCurveNode *clickedBezier;
-    uint8_t flagShowTangents;
+    uint8_t flagShowControlPoints;
 } RuntimeInfo;
 
 static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
@@ -65,7 +65,7 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
         );
         cairo_stroke(cr);
 
-        if (data->flagShowTangents) {
+        if (data->flagShowControlPoints) {
             // The tangents to c1 and c2
             cairo_set_dash(cr, dashes, 1, 0.0);
             cairo_set_line_width(cr, tangentLineWidth);
@@ -187,9 +187,9 @@ static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, Runti
     return TRUE;
 }
 
-static void toggle_show_tangents(GtkWidget* self, RuntimeInfo *data)
+static void toggle_show_control_points(GtkWidget* self, RuntimeInfo *data)
 {
-    data->flagShowTangents = data->flagShowTangents ? FALSE : TRUE;
+    data->flagShowControlPoints = data->flagShowControlPoints ? FALSE : TRUE;
 
     gtk_widget_queue_draw(data->canvas);
 }
@@ -206,7 +206,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     GtkWidget *window, *box, *canvas;
     GtkWidget *menubar, *fileMenu, *editMenu;
     /* Menu Items */
-    GtkWidget *quitMI, *addPointMI, *showTangentsMI;
+    GtkWidget *quitMI, *addPointMI, *showControlPointsMI;
     /* Top Level Menu Items */
     GtkWidget *fileTLMI, *editTLMI;
 
@@ -237,7 +237,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     editTLMI = gtk_menu_item_new_with_label("Edit");
     quitMI = gtk_menu_item_new_with_label("Quit");
     addPointMI = gtk_menu_item_new_with_label("Add curve");
-    showTangentsMI = gtk_menu_item_new_with_label("Show tangents");
+    showControlPointsMI = gtk_menu_item_new_with_label("Show control points");
 
     /* Menu encapsulation */
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileTLMI), fileMenu);
@@ -246,7 +246,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(editTLMI), editMenu);
     gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addPointMI);
-    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), showTangentsMI);
+    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), showControlPointsMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), editTLMI);
 
     gtk_box_pack_start(GTK_BOX(box), menubar, FALSE, FALSE, 0);
@@ -256,7 +256,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(addPointMI, "activate", accel_group,
         GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
-    gtk_widget_add_accelerator(showTangentsMI, "activate", accel_group,
+    gtk_widget_add_accelerator(showControlPointsMI, "activate", accel_group,
         GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
 
     /* Menu signals */
@@ -264,8 +264,8 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         G_CALLBACK(quit_app), data);
     g_signal_connect(G_OBJECT(addPointMI), "activate",
         G_CALLBACK(adding_curve), data);
-    g_signal_connect(G_OBJECT(showTangentsMI), "activate",
-        G_CALLBACK(toggle_show_tangents), data);
+    g_signal_connect(G_OBJECT(showControlPointsMI), "activate",
+        G_CALLBACK(toggle_show_control_points), data);
 
     /********* CANVAS ********/
     /*************************/
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
     RuntimeInfo info;
     init_list(&(info.list));
     info.addingCurveStep = NOT_ADDING_CURVE;
-    info.flagShowTangents = TRUE;
+    info.flagShowControlPoints = TRUE;
 
     app = gtk_application_new("xnemet04.vut.fit.gux.bedit", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), &info);
