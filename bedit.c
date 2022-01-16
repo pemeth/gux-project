@@ -221,7 +221,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     GtkWidget *window, *box, *canvas;
     GtkWidget *menubar, *fileMenu, *editMenu;
     /* Menu Items */
-    GtkWidget *quitMI, *addPointMI, *showControlPointsMI, *newCanvasMI;
+    GtkWidget *quitMI, *addCurveMI, *showControlPointsMI, *newCanvasMI;
     /* Top Level Menu Items */
     GtkWidget *fileTLMI, *editTLMI;
 
@@ -251,7 +251,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     fileTLMI = gtk_menu_item_new_with_mnemonic("_File");
     editTLMI = gtk_menu_item_new_with_mnemonic("_Edit");
     quitMI = gtk_menu_item_new_with_mnemonic("_Quit");
-    addPointMI = gtk_menu_item_new_with_mnemonic("_Add Curve");
+    addCurveMI = gtk_menu_item_new_with_mnemonic("_Add Curve");
     showControlPointsMI = gtk_menu_item_new_with_mnemonic("_Show Control Points");
     newCanvasMI = gtk_menu_item_new_with_mnemonic("_New Canvas");
     // TODO add new menu with help
@@ -264,7 +264,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), fileTLMI);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(editTLMI), editMenu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addPointMI);
+    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addCurveMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), showControlPointsMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), editTLMI);
 
@@ -275,7 +275,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(quitMI, "activate", accel_group,
         GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-    gtk_widget_add_accelerator(addPointMI, "activate", accel_group,
+    gtk_widget_add_accelerator(addCurveMI, "activate", accel_group,
         GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(showControlPointsMI, "activate", accel_group,
         GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
@@ -285,7 +285,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         G_CALLBACK(reset_canvas), data);
     g_signal_connect(G_OBJECT(quitMI), "activate",
         G_CALLBACK(quit_app), data);
-    g_signal_connect(G_OBJECT(addPointMI), "activate",
+    g_signal_connect(G_OBJECT(addCurveMI), "activate",
         G_CALLBACK(adding_curve), data);
     g_signal_connect(G_OBJECT(showControlPointsMI), "activate",
         G_CALLBACK(toggle_show_control_points), data);
