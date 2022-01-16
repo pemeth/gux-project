@@ -175,8 +175,9 @@ static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, Ru
     data->click.x = event->x;
     data->click.y = event->y;
 
-    // TODO make it so that points are moveable only if a modifier flag is turned on
-    is_click_on_bezier(&(data->list), data->click, 10, &(data->clickedPoint), &(data->clickedBezier));
+    if (data->flagShowControlPoints) {
+        is_click_on_bezier(&(data->list), data->click, 10, &(data->clickedPoint), &(data->clickedBezier));
+    }
 
     return TRUE;
 }
@@ -190,8 +191,8 @@ static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, Runti
     data->click.x = event->x;
     data->click.y = event->y;
 
-    // If a point was clicked on it is selected - move it around
-    if (data->clickedPoint != NULL) {
+    // If a point was clicked on, it is selected - move it around
+    if (data->clickedPoint != NULL && data->flagShowControlPoints) {
         data->clickedPoint->x = data->click.x;
         data->clickedPoint->y = data->click.y;
     }
