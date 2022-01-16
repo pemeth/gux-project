@@ -85,6 +85,22 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
             cairo_arc(cr, curr->c2.x, curr->c2.y, cpRadius, 0.0, 2 * M_PI);
             cairo_stroke(cr);
 
+            // The start and end of the bezier curve
+            cairo_new_path(cr);
+            cairo_move_to(cr, curr->start.x - cpRadius, curr->start.y - cpRadius);
+            cairo_rel_line_to(cr, cpRadius * 2, 0);
+            cairo_rel_line_to(cr, 0, cpRadius * 2);
+            cairo_rel_line_to(cr, -cpRadius * 2, 0);
+            cairo_close_path(cr);
+
+            cairo_move_to(cr, curr->end.x - cpRadius, curr->end.y - cpRadius);
+            cairo_rel_line_to(cr, cpRadius * 2, 0);
+            cairo_rel_line_to(cr, 0, cpRadius * 2);
+            cairo_rel_line_to(cr, -cpRadius * 2, 0);
+            cairo_close_path(cr);
+
+            cairo_stroke(cr);
+
             // Reset lines
             cairo_set_dash(cr, dashes, 0, 0.0);
             cairo_set_line_width(cr, curveLineWidth);
