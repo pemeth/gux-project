@@ -168,6 +168,7 @@ static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, Ru
     data->click.x = event->x;
     data->click.y = event->y;
 
+    // TODO make it so that points are moveable only if a modifier flag is turned on
     is_click_on_bezier(&(data->list), data->click, 10, &(data->clickedPoint), &(data->clickedBezier));
 
     return TRUE;
@@ -244,6 +245,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     quitMI = gtk_menu_item_new_with_label("Quit");
     addPointMI = gtk_menu_item_new_with_label("Add curve");
     showControlPointsMI = gtk_menu_item_new_with_label("Show control points");
+    // TODO add new menu with help
 
     /* Menu encapsulation */
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileTLMI), fileMenu);
@@ -264,6 +266,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(showControlPointsMI, "activate", accel_group,
         GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
+    // TODO add key (e.g. "C") to clear entire canvas
 
     /* Menu signals */
     g_signal_connect(G_OBJECT(quitMI), "activate",
