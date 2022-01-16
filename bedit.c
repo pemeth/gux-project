@@ -163,6 +163,13 @@ static gboolean canvas_button_released(GtkWidget *self, GdkEventButton *event, R
     return TRUE;
 }
 
+static void reset_canvas(GtkWidget* self, RuntimeInfo *data)
+{
+    delete_list(&(data->list));
+
+    gtk_widget_queue_draw(data->canvas);
+}
+
 static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, RuntimeInfo *data)
 {
     data->click.x = event->x;
@@ -213,7 +220,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     GtkWidget *window, *box, *canvas;
     GtkWidget *menubar, *fileMenu, *editMenu;
     /* Menu Items */
-    GtkWidget *quitMI, *addPointMI, *showControlPointsMI;
+    GtkWidget *quitMI, *addPointMI, *showControlPointsMI, *newCanvasMI;
     /* Top Level Menu Items */
     GtkWidget *fileTLMI, *editTLMI;
 
@@ -245,10 +252,13 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     quitMI = gtk_menu_item_new_with_label("Quit");
     addPointMI = gtk_menu_item_new_with_label("Add curve");
     showControlPointsMI = gtk_menu_item_new_with_label("Show control points");
+    newCanvasMI = gtk_menu_item_new_with_label("New Canvas");
     // TODO add new menu with help
 
     /* Menu encapsulation */
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(fileTLMI), fileMenu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), newCanvasMI);
+    gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), gtk_separator_menu_item_new()); // TODO figure out if it is OK to use separators like this
     gtk_menu_shell_append(GTK_MENU_SHELL(fileMenu), quitMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), fileTLMI);
 
@@ -260,15 +270,18 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     gtk_box_pack_start(GTK_BOX(box), menubar, FALSE, FALSE, 0);
 
     /* Menu Item accelerators */
+    gtk_widget_add_accelerator(newCanvasMI, "activate", accel_group,
+        GDK_KEY_n, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(quitMI, "activate", accel_group,
         GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(addPointMI, "activate", accel_group,
         GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(showControlPointsMI, "activate", accel_group,
         GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
-    // TODO add key (e.g. "C") to clear entire canvas
 
     /* Menu signals */
+    g_signal_connect(G_OBJECT(newCanvasMI), "activate",
+        G_CALLBACK(reset_canvas), data);
     g_signal_connect(G_OBJECT(quitMI), "activate",
         G_CALLBACK(quit_app), data);
     g_signal_connect(G_OBJECT(addPointMI), "activate",
