@@ -33,16 +33,6 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
     // Reset color to black
     cairo_set_source_rgb(cr, 0, 0, 0);
 
-    // Show a small square where the cursor is
-    cairo_new_path(cr);
-    cairo_move_to(cr, data->click.x - 5, data->click.y - 5);
-    cairo_rel_line_to(cr, 10, 0);
-    cairo_rel_line_to(cr, 0, 10);
-    cairo_rel_line_to(cr, -10, 0);
-    cairo_close_path(cr);
-    cairo_fill(cr);
-    cairo_stroke(cr);
-
     if (data->addingCurveStep != NOT_ADDING_CURVE) {
         show_selected_points(cr, data->addingCurveStep, data->lastAddedCurve);
     }
