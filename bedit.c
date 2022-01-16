@@ -247,12 +247,12 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     editMenu = gtk_menu_new();
 
     /* Menu Items */
-    fileTLMI = gtk_menu_item_new_with_label("File");
-    editTLMI = gtk_menu_item_new_with_label("Edit");
-    quitMI = gtk_menu_item_new_with_label("Quit");
-    addPointMI = gtk_menu_item_new_with_label("Add Curve");
-    showControlPointsMI = gtk_menu_item_new_with_label("Show Control Points");
-    newCanvasMI = gtk_menu_item_new_with_label("New Canvas");
+    fileTLMI = gtk_menu_item_new_with_mnemonic("_File");
+    editTLMI = gtk_menu_item_new_with_mnemonic("_Edit");
+    quitMI = gtk_menu_item_new_with_mnemonic("_Quit");
+    addPointMI = gtk_menu_item_new_with_mnemonic("_Add Curve");
+    showControlPointsMI = gtk_menu_item_new_with_mnemonic("_Show Control Points");
+    newCanvasMI = gtk_menu_item_new_with_mnemonic("_New Canvas");
     // TODO add new menu with help
 
     /* Menu encapsulation */
