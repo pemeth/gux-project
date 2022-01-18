@@ -1,37 +1,28 @@
 CC = gcc
-CFLAGS = -Wall -g -pedantic -std=c11
+CFLAGS = -Wall -g -pedantic -std=c11 `pkg-config --cflags ${GTK_PKG}`
 
 NAME = bedit
-SRCS = $(wildcard *.c)
-OBJECTS = $(SRCS:.c=.o)
+SRCS = bedit.c bezier.c utils.c
+OBJECTS = bedit.o bezier.o utils.o
 GTK_PKG = gtk+-3.0
 
-# This is used ONLY with the `bezier` target.
-# In case I want to debug/test the bezier linked list,
-# then I can just call `make bezier` and an executable is created
-# with its own main function.
-# If for whatever reason I need to keep in the GTK definitions
-# and cannot have the main function included,
-# use `make bezier NO_DEBUG=1`
-ifeq ($(origin NO_DEBUG), undefined)
-	DEBUG_OPTIONS = -DDEBUG -o $@
-else
-	GTK = `pkg-config ${GTK_PKG} --cflags --libs`
-	GEN_OBJ = -c
-endif
+LDLIBS = `pkg-config --libs ${GTK_PKG}`
 
 .PHONY: build clean
 
 all: build
 
 build: $(OBJECTS)
-	$(CC) $(LDFLAGS) $(CFLAGS) -o $(NAME) $^ `pkg-config ${GTK_PKG} --cflags --libs`
+	$(CC) $(OBJECTS) $(LDFLAGS) $(CFLAGS) -o $(NAME) $(LDLIBS)
 
-%.o: %.c
-	$(CC) $(LDFLAGS) $(CFLAGS) -c $^ `pkg-config ${GTK_PKG} --cflags --libs`
+bedit.o: bedit.c
+	$(CC) bedit.c $(LDFLAGS) $(CFLAGS) -c $(LDLIBS)
 
-bezier: bezier.c
-	$(CC) $(LDFLAGS) $(CFLAGS) $(DEBUG_OPTIONS) $(GEN_OBJ) $^ $(GTK)
+bezier.o: bezier.c
+	$(CC) bezier.c $(LDFLAGS) $(CFLAGS) -c $(LDLIBS)
+
+utils.o: utils.c
+	$(CC) utils.c $(LDFLAGS) $(CFLAGS) -c $(LDLIBS)
 
 clean:
 	rm -f $(NAME) $(OBJECTS) bezier
