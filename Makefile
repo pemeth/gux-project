@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall -g -pedantic -std=c11
 
 NAME = bedit
 SRCS = $(wildcard *.c)

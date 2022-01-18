@@ -7,6 +7,10 @@
 #include "bezier.h"
 #include "utils.h"
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 // TODO probably move these to a header
 
 typedef struct RuntimeInfo
