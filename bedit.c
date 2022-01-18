@@ -55,6 +55,10 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
         );
         cairo_stroke(cr);
 
+        // If a curve is selected, show its control points in color
+        if (curr == data->clickedBezier)
+            cairo_set_source_rgb(cr, 127, 0, 0);
+
         if (data->flagShowControlPoints) {
             // The tangents to c1 and c2
             cairo_set_dash(cr, dashes, 1, 0.0);
@@ -96,6 +100,7 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
             cairo_set_line_width(cr, curveLineWidth);
         }
 
+        cairo_set_source_rgb(cr, 0, 0, 0);
         curr = curr->next;
     }
 
