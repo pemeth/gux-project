@@ -17,8 +17,8 @@ typedef struct RuntimeInfo
     GtkApplication *app; //!< Pointer to the application.
     uint8_t addingCurveStep;
     CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
-    Point *clickedPoint;
-    BezierCurveNode *clickedBezier;
+    Point *selectedPoint;
+    BezierCurveNode *selectedBezier;
     uint8_t flagShowControlPoints;
 } RuntimeInfo;
 
@@ -56,7 +56,7 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
         cairo_stroke(cr);
 
         // If a curve is selected, show its control points in color
-        if (curr == data->clickedBezier)
+        if (curr == data->selectedBezier)
             cairo_set_source_rgb(cr, 127, 0, 0);
 
         if (data->flagShowControlPoints) {
@@ -181,7 +181,7 @@ static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, Ru
     data->click.y = event->y;
 
     if (data->flagShowControlPoints) {
-        is_click_on_bezier(&(data->list), data->click, 10, &(data->clickedPoint), &(data->clickedBezier));
+        is_click_on_bezier(&(data->list), data->click, 10, &(data->selectedPoint), &(data->selectedBezier));
     }
 
     return TRUE;
@@ -197,9 +197,9 @@ static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, Runti
     data->click.y = event->y;
 
     // If a point was clicked on, it is selected - move it around
-    if (data->clickedPoint != NULL && data->flagShowControlPoints) {
-        data->clickedPoint->x = data->click.x;
-        data->clickedPoint->y = data->click.y;
+    if (data->selectedPoint != NULL && data->flagShowControlPoints) {
+        data->selectedPoint->x = data->click.x;
+        data->selectedPoint->y = data->click.y;
     }
 
     gtk_widget_queue_draw(self);
