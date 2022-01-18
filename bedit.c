@@ -1,4 +1,3 @@
-#include <math.h>
 #include <stdint.h>
 
 #include <gtk/gtk.h>
@@ -7,15 +6,13 @@
 #include "bezier.h"
 #include "utils.h"
 
-#ifndef M_PI
-    #define M_PI 3.14159265358979323846
-#endif
+#define M_PI 3.14159265358979323846
 
 #define USAGE_HELP_TEXT "\
 \nSHORTCUTS\
 \n\t\"A\"\t\tAdd a new curve by defining its four control points.\
 \n\t\"D\"\t\tDelete the currently selected curve.\
-\n\t\"S\"\t\tToggle showing/hiding of control points.\
+\n\t\"E\"\t\tToggle edit mode.\
 \n\t\"Ctrl+N\"\tCreate a new blank canvas.\
 \n\t\"Ctrl+Q\"\tQuit the application.\
 \n\
@@ -23,9 +20,14 @@
 \n\tTo create a new Bezier curve use shortcut \"A\" and define four\
 \n\tBezier control points by clicking on the canvas.\
 \n\
+\nEDIT MODE\
+\n\tToggled by \"E\" to show/hide control points, enable curve editing\
+\n\tand curve deletion. If control points are visible, edit mode is\
+\n\ttoggled ON, if they are not, it is OFF.\
+\n\
 \nEDITING A CURVE\
 \n\tClick and drag any control point. The control points must be\
-\n\tvisible (toggle with \"S\" if they are not).\
+\n\tvisible (toggle with \"E\" if they are not).\
 \n\
 \nSELECTING A CURVE\
 \n\tTo select a curve, click on any of its control points. The selected \
@@ -44,8 +46,8 @@ typedef struct RuntimeInfo
     uint8_t addingCurveStep;
     CurvePoints lastAddedCurve; //!< Curve that is being (or was last) constructed by the user
     Point *selectedPoint;
-    BezierCurveNode *selectedBezier;
-    uint8_t flagShowControlPoints;
+    BezierCurveNode *selectedCurve;
+    uint8_t flagEditMode;
 } RuntimeInfo;
 
 static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
@@ -82,10 +84,10 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
         cairo_stroke(cr);
 
         // If a curve is selected, show its control points in color
-        if (curr == data->selectedBezier)
+        if (curr == data->selectedCurve)
             cairo_set_source_rgb(cr, 127, 0, 0);
 
-        if (data->flagShowControlPoints) {
+        if (data->flagEditMode) {
             // The tangents to c1 and c2
             cairo_set_dash(cr, dashes, 1, 0.0);
             cairo_set_line_width(cr, tangentLineWidth);
@@ -130,21 +132,6 @@ static gboolean canvas_draw(GtkWidget *self, cairo_t *cr, RuntimeInfo *data)
         curr = curr->next;
     }
 
-    // A demo for modifying a bezier curve by dragging the control point
-    /* cairo_new_path(cr);
-    cairo_move_to(cr, 250, 200);
-    cairo_curve_to(cr, 250, 250, data->click.x, data->click.y, 300, 300);
-    cairo_stroke(cr); */
-
-    // Show tangent line of the control point
-    /* cairo_new_path(cr);
-    cairo_move_to(cr, 300, 300);
-    cairo_line_to(cr, data->click.x, data->click.y);
-    double dashes[] = {2.0};
-    cairo_set_dash(cr, dashes, 1, 0.0);
-    cairo_set_line_width(cr, 1.0);
-    cairo_stroke(cr); */
-
     return TRUE;
 }
 
@@ -156,12 +143,12 @@ static void adding_curve(GtkWidget *self, RuntimeInfo *data)
 
 static void delete_curve(GtkWidget *self, RuntimeInfo *data)
 {
-    if (!data->selectedBezier) {
+    if (!data->selectedCurve || data->flagEditMode == FALSE) {
         return;
     }
 
-    remove_curve(&(data->list), data->selectedBezier);
-    data->selectedBezier = NULL;
+    remove_curve(&(data->list), data->selectedCurve);
+    data->selectedCurve = NULL;
     data->selectedPoint = NULL;
 
     gtk_widget_queue_draw(data->canvas);
@@ -219,8 +206,8 @@ static gboolean canvas_button_pressed(GtkWidget *self, GdkEventButton *event, Ru
     data->click.x = event->x;
     data->click.y = event->y;
 
-    if (data->flagShowControlPoints) {
-        is_click_on_bezier(&(data->list), data->click, 10, &(data->selectedPoint), &(data->selectedBezier));
+    if (data->flagEditMode) {
+        is_click_on_bezier(&(data->list), data->click, 10, &(data->selectedPoint), &(data->selectedCurve));
     }
 
     return TRUE;
@@ -236,7 +223,7 @@ static gboolean canvas_button_move(GtkWidget* self, GdkEventMotion* event, Runti
     data->click.y = event->y;
 
     // If a point was clicked on, it is selected - move it around
-    if (data->selectedPoint != NULL && data->flagShowControlPoints) {
+    if (data->selectedPoint != NULL && data->flagEditMode) {
         data->selectedPoint->x = data->click.x;
         data->selectedPoint->y = data->click.y;
     }
@@ -279,7 +266,7 @@ static void show_help_widnow(GtkWidget *self, gpointer *data)
 
 static void toggle_show_control_points(GtkWidget* self, RuntimeInfo *data)
 {
-    data->flagShowControlPoints = data->flagShowControlPoints ? FALSE : TRUE;
+    data->flagEditMode = data->flagEditMode ? FALSE : TRUE;
 
     gtk_widget_queue_draw(data->canvas);
 }
@@ -296,7 +283,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     GtkWidget *window, *box, *canvas;
     GtkWidget *menubar, *fileMenu, *editMenu, *helpMenu;
     /* Menu Items */
-    GtkWidget   *quitMI, *addCurveMI, *showControlPointsMI, *newCanvasMI,
+    GtkWidget   *quitMI, *addCurveMI, *toggleEditModeMI, *newCanvasMI,
                 *usageMI, *deleteCurveMI;
     /* Top Level Menu Items */
     GtkWidget *fileTLMI, *editTLMI, *helpTLMI;
@@ -330,7 +317,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     helpTLMI = gtk_menu_item_new_with_mnemonic("_Help");
     quitMI = gtk_menu_item_new_with_mnemonic("_Quit");
     addCurveMI = gtk_menu_item_new_with_mnemonic("_Add Curve");
-    showControlPointsMI = gtk_menu_item_new_with_mnemonic("_Show Control Points");
+    toggleEditModeMI = gtk_menu_item_new_with_mnemonic("Toggle _Edit Mode");
     newCanvasMI = gtk_menu_item_new_with_mnemonic("_New Canvas");
     deleteCurveMI = gtk_menu_item_new_with_mnemonic("_Delete Curve");
     usageMI = gtk_menu_item_new_with_mnemonic("_Usage");
@@ -345,7 +332,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(editTLMI), editMenu);
     gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addCurveMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), deleteCurveMI);
-    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), showControlPointsMI);
+    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), toggleEditModeMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), editTLMI);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(helpTLMI), helpMenu);
@@ -363,8 +350,8 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(deleteCurveMI, "activate", accel_group,
         GDK_KEY_d, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
-    gtk_widget_add_accelerator(showControlPointsMI, "activate", accel_group,
-        GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator(toggleEditModeMI, "activate", accel_group,
+        GDK_KEY_e, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
 
     /* Menu signals */
     g_signal_connect(G_OBJECT(newCanvasMI), "activate",
@@ -375,7 +362,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         G_CALLBACK(adding_curve), data);
     g_signal_connect(G_OBJECT(deleteCurveMI), "activate",
         G_CALLBACK(delete_curve), data);
-    g_signal_connect(G_OBJECT(showControlPointsMI), "activate",
+    g_signal_connect(G_OBJECT(toggleEditModeMI), "activate",
         G_CALLBACK(toggle_show_control_points), data);
     g_signal_connect(G_OBJECT(usageMI), "activate",
         G_CALLBACK(show_help_widnow), NULL);
@@ -414,7 +401,7 @@ int main(int argc, char *argv[])
     RuntimeInfo info;
     init_list(&(info.list));
     info.addingCurveStep = NOT_ADDING_CURVE;
-    info.flagShowControlPoints = TRUE;
+    info.flagEditMode = TRUE;
 
     app = gtk_application_new("xnemet04.vut.fit.gux.bedit", G_APPLICATION_FLAGS_NONE);
     g_signal_connect(app, "activate", G_CALLBACK(activate), &info);
