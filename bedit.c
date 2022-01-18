@@ -14,7 +14,7 @@
 #define USAGE_HELP_TEXT "\
 \nSHORTCUTS\
 \n\t\"A\"\t\tAdd a new curve by defining its four control points.\
-\n\t\"D\"\t\tDelete a curve.\
+\n\t\"D\"\t\tDelete the currently selected curve.\
 \n\t\"S\"\t\tToggle showing/hiding of control points.\
 \n\t\"Ctrl+N\"\tCreate a new blank canvas.\
 \n\t\"Ctrl+Q\"\tQuit the application.\
@@ -154,6 +154,19 @@ static void adding_curve(GtkWidget *self, RuntimeInfo *data)
     data->addingCurveStep = ADDING_CURVE_START;
 }
 
+static void delete_curve(GtkWidget *self, RuntimeInfo *data)
+{
+    if (!data->selectedBezier) {
+        return;
+    }
+
+    remove_curve(&(data->list), data->selectedBezier);
+    data->selectedBezier = NULL;
+    data->selectedPoint = NULL;
+
+    gtk_widget_queue_draw(data->canvas);
+}
+
 static gboolean canvas_button_released(GtkWidget *self, GdkEventButton *event, RuntimeInfo *data)
 {
     data->click.x = event->x;
@@ -283,7 +296,8 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     GtkWidget *window, *box, *canvas;
     GtkWidget *menubar, *fileMenu, *editMenu, *helpMenu;
     /* Menu Items */
-    GtkWidget *quitMI, *addCurveMI, *showControlPointsMI, *newCanvasMI, *usageMI;
+    GtkWidget   *quitMI, *addCurveMI, *showControlPointsMI, *newCanvasMI,
+                *usageMI, *deleteCurveMI;
     /* Top Level Menu Items */
     GtkWidget *fileTLMI, *editTLMI, *helpTLMI;
 
@@ -318,6 +332,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
     addCurveMI = gtk_menu_item_new_with_mnemonic("_Add Curve");
     showControlPointsMI = gtk_menu_item_new_with_mnemonic("_Show Control Points");
     newCanvasMI = gtk_menu_item_new_with_mnemonic("_New Canvas");
+    deleteCurveMI = gtk_menu_item_new_with_mnemonic("_Delete Curve");
     usageMI = gtk_menu_item_new_with_mnemonic("_Usage");
 
     /* Menu encapsulation */
@@ -329,6 +344,7 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(editTLMI), editMenu);
     gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), addCurveMI);
+    gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), deleteCurveMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(editMenu), showControlPointsMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(menubar), editTLMI);
 
@@ -345,6 +361,8 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         GDK_KEY_q, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(addCurveMI, "activate", accel_group,
         GDK_KEY_a, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator(deleteCurveMI, "activate", accel_group,
+        GDK_KEY_d, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
     gtk_widget_add_accelerator(showControlPointsMI, "activate", accel_group,
         GDK_KEY_s, (GdkModifierType)0, GTK_ACCEL_VISIBLE);
 
@@ -355,6 +373,8 @@ static void activate(GtkApplication *app, RuntimeInfo *data)
         G_CALLBACK(quit_app), data);
     g_signal_connect(G_OBJECT(addCurveMI), "activate",
         G_CALLBACK(adding_curve), data);
+    g_signal_connect(G_OBJECT(deleteCurveMI), "activate",
+        G_CALLBACK(delete_curve), data);
     g_signal_connect(G_OBJECT(showControlPointsMI), "activate",
         G_CALLBACK(toggle_show_control_points), data);
     g_signal_connect(G_OBJECT(usageMI), "activate",

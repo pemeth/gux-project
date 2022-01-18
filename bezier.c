@@ -78,6 +78,37 @@ void remove_last(BezierCurveList *list)
     remove_nth(list, list->n_nodes - 1);
 }
 
+void remove_curve(BezierCurveList *list, BezierCurveNode *curve)
+{
+    if (list == NULL) {
+        return;
+    }
+
+    BezierCurveNode *previous = NULL;
+    BezierCurveNode *current = list->root;
+    while (current != NULL && current != curve) {
+        previous = current;
+        current = current->next;
+    }
+
+    // Not found
+    if (current == NULL) {
+        return;
+    }
+
+    if (previous == NULL) {
+        // First in list
+        list->root = current->next;
+    } else {
+        // Not first in list
+        previous->next = current->next;
+    }
+
+    current->next = NULL;
+    free(current);
+    list->n_nodes--;
+}
+
 void delete_list(BezierCurveList *list)
 {
     if (list == NULL) {

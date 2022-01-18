@@ -34,6 +34,7 @@ typedef struct BezierCurveList
 void delete_list(BezierCurveList *list);
 void remove_nth(BezierCurveList *list, size_t n);
 void remove_last(BezierCurveList *list);
+void remove_curve(BezierCurveList *list, BezierCurveNode *curve);
 void init_list(BezierCurveList *list);
 void print_list(BezierCurveList *list);
 void print_node(BezierCurveNode *node);
